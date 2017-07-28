@@ -7,7 +7,7 @@ This package contains InformationForBeamlines device class based on the facadede
 
 from setuptools import find_packages
 
-__all__ = ['informayion_for_beamlines_ds', 'version']
+__all__ = ['information_for_beamlines_ds', 'version']
 __doc__ = ""
 __author__ = "Michal Piekarski"
 __author_email__ = "michalpiekars@gmail.com"
