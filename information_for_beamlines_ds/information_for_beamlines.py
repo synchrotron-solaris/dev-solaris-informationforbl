@@ -1,22 +1,41 @@
-"""This is the InformationForBeamlines device based on the facadedevice library. It stores communication between Control Room and beamlines."""
-
-from facadedevice import Facade, proxy_attribute, logical_attribute
+"""This is the InformationForBeamlines device
+based on the facadedevice library. It stores communication
+between Control Room and beamlines."""
+from facadedevice import Facade, proxy_attribute, \
+    logical_attribute, state_attribute
 from tango import AttrWriteType, DevState, DispLevel
 from tango.server import attribute
 
 class InformationForBeamlines(Facade):
+    """
+    This class specifies InformationForBeamlines facade.
+    It is based on facadedevice library.
+    It contains:
+    - two attributes GeneralInfo and FillingPattern which provide string
+      messages
+    - two bool proxy attributes: InjectionStatus (true during injection process)
+      ExperimentEnable (true when experiments can be performed)
+    - two DevState proxy attributes: BIMState and MPSState which show states of those
+    - logical attribute which indicates three possible statuses: Injection
+      (InjectionStatus:true), ExperimentEnable (ExperimentEnable:true and current
+      is higher than 1mA), MDT (in other cases)
+    - state attribute that recognises states of MPS and BIM
+    """
 
     filling_pattern = ''
     general_info = ''
 
     def safe_init_device(self):
         """
-        Docstring for 'safe_init_device' - it is just safe initialization of the DS.
+        Docstring for 'safe_init_device' - it is just safe
+        initialization of the DS.
         :return:
         """
         super(InformationForBeamlines, self).safe_init_device()
         self.set_state(DevState.ON)
         self.set_status("Device is running")
+        self.set_change_event("GeneralInfo", True, False)
+        self.set_change_event("Fillingpattern", True, False)
         self.general_info = 'No information.'
         self.filling_pattern = 'No filling pattern.'
 
@@ -58,15 +77,17 @@ class InformationForBeamlines(Facade):
         doc='Forwarded experiment enable status tag from MPS PLC.'
     )
 
-    BeamCurrent = proxy_attribute(
+    @proxy_attribute(
         dtype='float',
         property_name='BeamCurrentAttr',
-        unit='A',
-        format='%8.6f',
-        access=AttrWriteType.READ,
+        unit='mA',
+        label="Beam Current in mA",
+        access=AttrWriteType.READ_WRITE,
         display_level=DispLevel.EXPERT,
-        doc="Forwarded beam current from BIM."
+        doc="Forwarded beam current from BIM. It is displayed in mA."
     )
+    def BeamCurrent(self,data):
+        return data*1000
 
     BIMState = proxy_attribute(
         dtype="DevState",
@@ -101,32 +122,9 @@ class InformationForBeamlines(Facade):
         else:
             return 'MDT'
 
-    @logical_attribute(
-        dtype=float,
-        unit='mA',
-        bind=["BeamCurrent"],
-        format='%4.3f',
-        label='Beam Current (mA)',
-        doc='Beam current in miliamperes.',
-        display_level=DispLevel.EXPERT)
-    def BeamCurrent_mA(self, data):
-        current_mA = data * 1000.0
-        # :TODO: Clarify if it's possible to push AttrQuality here.
-        # if abs(current_mA) >= 1e-6:
-        #     return current_mA , time(), AttrQuality.ATTR_VALID
-        # else:
-        #     return current_mA , time(), AttrQuality.ATTR_INVALID
-        return current_mA
-
-    def always_executed_hook(self):
-        pass
-
-    def delete_device(self):
-        pass
-
-    def state_from_data(self, data):
-        mps = data['MPSState']
-        bim = data['BIMState']
+    @state_attribute(
+        bind=["MPSState","BIMState"])
+    def state_from_data(self, mps, bim):
         if mps == DevState.FAULT:
             self.set_status('MPS PLC device is in FAULT.')
             return DevState.FAULT
@@ -143,25 +141,25 @@ class InformationForBeamlines(Facade):
         self.set_state(DevState.ON)
         self.set_status('Everything is OK.')
 
-        # ------------------
-        # Attributes methods
-        # ------------------
+    # ------------------
+    # Attributes methods
+    # ------------------
 
     def read_GeneralInfo(self):
         return self.general_info
 
     def write_GeneralInfo(self, value):
         self.general_info = value
-        # self.push_change_event('GeneralInfo')
-        # self.push_data_ready_event('GeneralInfo')
+        self.push_change_event('GeneralInfo', value)
+        self.push_data_ready_event('GeneralInfo', 0)
 
     def read_FillingPattern(self):
         return self.filling_pattern
 
     def write_FillingPattern(self, value):
         self.filling_pattern = value
-        # self.push_change_event('FillingPattern')
-        # self.push_data_ready_event('FillingPattern')
+        self.push_change_event('FillingPattern', value)
+        self.push_data_ready_event('FillingPattern', 0)
 
 # ----------
 # Run server
