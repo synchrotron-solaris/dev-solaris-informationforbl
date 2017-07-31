@@ -26,14 +26,14 @@ class InformationForBeamlines(Facade):
 
     GeneralInfo = attribute(
         dtype='str',
-        access=AttrWriteType.READ,
+        access=AttrWriteType.READ_WRITE,
         label="General info",
         doc="General message from CR to all beamlines.",
     )
 
     FillingPattern = attribute(
         dtype='str',
-        access=AttrWriteType.READ,
+        access=AttrWriteType.READ_WRITE,
         label="Filling Pattern",
         doc="The filling pattern currently used in the storage ring.",
     )
@@ -47,7 +47,7 @@ class InformationForBeamlines(Facade):
         dtype='bool',
         property_name="InjectionStatusTag",
         display_level=DispLevel.EXPERT,
-        access=AttrWriteType.READ_WRITE,
+        access=AttrWriteType.READ,
         doc="Forwarded injection status tag from MPS PLC."
     )
 
@@ -55,7 +55,7 @@ class InformationForBeamlines(Facade):
         dtype='bool',
         property_name='ExperimentEnableTag',
         display_level=DispLevel.EXPERT,
-        access=AttrWriteType.READ_WRITE, #change!
+        access=AttrWriteType.READ,
         doc='Forwarded experiment enable status tag from MPS PLC.'
     )
 
@@ -64,7 +64,7 @@ class InformationForBeamlines(Facade):
         property_name='BeamCurrentAttr',
         unit='A',
         format='%8.6f',
-        access=AttrWriteType.READ_WRITE,
+        access=AttrWriteType.READ,
         display_level=DispLevel.EXPERT,
         doc="Forwarded beam current from BIM."
     )
