@@ -40,7 +40,6 @@ class InformationForBeamlines(Facade):
 
     # ----------
     # Proxy attributes
-    # device ?
     # ----------
 
     InjectionStatus = proxy_attribute(
