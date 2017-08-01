@@ -163,8 +163,7 @@ class InformationForBeamlines(Facade):
 # Run server
 # ----------
 
-#run = InformationForBeamlines.run_server()
+run = InformationForBeamlines.run_server()
 
 if __name__ == '__main__':
-    #run()
-    InformationForBeamlines.run_server()
+    run()
