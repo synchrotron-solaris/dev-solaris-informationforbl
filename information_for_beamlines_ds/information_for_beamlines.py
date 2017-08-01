@@ -1,6 +1,7 @@
 """This is the InformationForBeamlines device
 based on the facadedevice library. It stores communication
 between Control Room and beamlines."""
+
 from facadedevice import Facade, proxy_attribute, \
     logical_attribute, state_attribute
 from tango import AttrWriteType, DevState, DispLevel
@@ -11,6 +12,7 @@ class InformationForBeamlines(Facade):
     This class specifies InformationForBeamlines facade.
     It is based on facadedevice library.
     It contains:
+
     - two attributes GeneralInfo and FillingPattern which provide string
       messages
     - two bool proxy attributes: InjectionStatus (true during injection process)
@@ -20,6 +22,7 @@ class InformationForBeamlines(Facade):
       (InjectionStatus:true), ExperimentEnable (ExperimentEnable:true and current
       is higher than 1mA), MDT (in other cases)
     - state attribute that recognises states of MPS and BIM
+
     """
 
     filling_pattern = ''
@@ -82,7 +85,7 @@ class InformationForBeamlines(Facade):
         property_name='BeamCurrentAttr',
         unit='mA',
         label="Beam Current in mA",
-        access=AttrWriteType.READ_WRITE,
+        access=AttrWriteType.READ,
         display_level=DispLevel.EXPERT,
         doc="Forwarded beam current from BIM. It is displayed in mA."
     )
@@ -126,20 +129,15 @@ class InformationForBeamlines(Facade):
         bind=["MPSState","BIMState"])
     def state_from_data(self, mps, bim):
         if mps == DevState.FAULT:
-            self.set_status('MPS PLC device is in FAULT.')
-            return DevState.FAULT
+            return DevState.FAULT, "MPS PLC device is in FAULT."
         elif mps != DevState.ON and mps != DevState.RUNNING:
-            self.set_status('MPS PLC device is in an unexpected state: %s' % str(mps))
-            return DevState.ALARM
+            return DevState.ALARM, "MPS PLC device is in an unexpected state: %s" % str(mps)
         if bim == DevState.FAULT:
-            self.set_status('BIM device is in FAULT.')
-            return DevState.FAULT
+            return DevState.FAULT, "BIM device is in FAULT."
         elif bim != DevState.ON and bim != DevState.RUNNING:
-            self.set_status('BIM device is in an unexpected state: %s' % str(bim))
-            return DevState.ALARM
-
-        self.set_state(DevState.ON)
-        self.set_status('Everything is OK.')
+            return DevState.ALARM, "BIM device is in an unexpected state: %s" % str(bim)
+        else:
+            return DevState.ON, "Everything is OK."
 
     # ------------------
     # Attributes methods
@@ -165,7 +163,8 @@ class InformationForBeamlines(Facade):
 # Run server
 # ----------
 
-run = InformationForBeamlines.run_server()
+#run = InformationForBeamlines.run_server()
 
 if __name__ == '__main__':
-    run()
+    #run()
+    InformationForBeamlines.run_server()
